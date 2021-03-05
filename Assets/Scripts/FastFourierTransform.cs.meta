@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 74c9bce46c5e9b342b39861440346695
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - Tex_gaussianNoise_1: {fileID: 2800000, guid: 835d20acb95ff684a90efab30b0444b6,
+      type: 3}
+  - Tex_gaussianNoise_2: {fileID: 2800000, guid: 0e4fd1a7c8cee924f89bdb66d2a30eb9,
+      type: 3}
+  - RT_tilde_h0_k: {fileID: 8400000, guid: 59f05cc575222c842bcb674264ffbe1c, type: 2}
+  - RT_tilde_h0_minusK: {fileID: 8400000, guid: 981626d5a94c7d146a78203948505bc1,
+      type: 2}
+  - RT_temp0: {instanceID: 0}
+  - RT_temp1: {instanceID: 0}
+  - RT_butterfly_texture: {instanceID: 0}
+  - RT_h_xk: {instanceID: 0}
+  - Compute_Tilde_H0K: {fileID: 7200000, guid: 9af1ac76b216cc74a85292b9d2f0c217, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

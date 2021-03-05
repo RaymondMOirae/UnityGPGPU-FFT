@@ -1,0 +1,69 @@
+﻿#pragma kernel ButterflyTexGen
+#define PI 3.1415926535897932384626433832795 
+
+struct complex{
+	float real;
+	float im;
+};
+
+complex new_complex(float real, float im)
+{
+    complex c;
+    c.real = real;
+    c.im = im;
+    return c;
+}
+
+float mod(float x, float y)
+{
+	return x - y * floor(x/y);
+}
+
+RWTexture2D<float4> ButterflyTexture;
+
+int BigN;
+
+[numthreads(8,8,1)]
+void ButterflyTexGen(uint3 id : SV_DispatchThreadID)
+{
+	float k = mod(id.y * ((float)BigN / pow(2, id.x + 1)), BigN);
+	
+	complex twiddle = new_complex(cos(2.0 * PI * k / (float)BigN), 
+								  sin(2.0 * PI * k / (float)BigN));
+
+	int butterflySpan = (int)pow(2, id.x);
+	int butterflyWing;
+	
+	if(mod(id.y, pow(2, id.x + 1)) < pow(2, id.x))
+	{
+		butterflyWing = 1;	
+	}else{	
+		butterflyWing = 0;
+	}
+
+	if(id.x == 0)
+	{
+		if(butterflyWing == 1)
+		{
+			ButterflyTexture[id.xy] = float4(twiddle.real, twiddle.im, 
+											 (float)reversebits((uint)id.y),
+											 (float)reversebits((uint)(id.y + 1)));
+		}else{	
+			ButterflyTexture[id.xy] = float4(twiddle.real, twiddle.im, 
+											 (float)reversebits((uint)(id.y - 1)),
+											 (float)reversebits((uint)id.y));
+		}
+	
+	}else{
+		if(butterflyWing == 1)
+		{
+			ButterflyTexture[id.xy] = float4(twiddle.real, twiddle.im, 
+											 id.y, id.y + butterflySpan);
+
+		}else{	
+
+			ButterflyTexture[id.xy] = float4(twiddle.real, twiddle.im, 
+											 id.y - butterflySpan, id.y);	
+		}	
+	}
+}

@@ -1,0 +1,196 @@
+﻿#pragma kernel FFTButterflyCompute
+#pragma kernel Permute
+
+struct complex
+{
+    float real;
+    float im;
+};
+
+complex new_complex(float real, float im)
+{
+    complex c;
+    c.real = real;
+    c.im = im;
+    return c;
+}
+
+complex comp_mul(complex c0, complex c1)
+{
+    complex c;
+    c.real = c0.real * c1.real - c0.im * c1.im;
+    c.im = c0.real * c1.im + c0.im * c1.real;
+    return c;
+}
+
+complex comp_add(complex c0, complex c1)
+{
+    complex c;
+    c.real = c0.real + c1.real;
+    c.im = c0.im + c1.im;
+    return c;
+}
+
+Texture2D<float4> ButterflyTex;
+RWTexture2D<float4> Pingpong0;
+RWTexture2D<float4> Pingpong1;
+
+int stage;
+bool pingpong;
+bool isHorizontal;
+
+void FFTHorizontal (int2 x)
+{
+    complex H;
+    
+    if (pingpong)
+    {
+        float4 data = ButterflyTex[int2(stage, x.x)].xyzw;
+        float2 p_ = Pingpong1[int2(data.z, x.y)].xy;
+        float2 q_ = Pingpong1[int2(data.w, x.y)].xy;
+        float2 w_ = float2(data.x, data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong0[x.xy] = float4(H.real, H.im, 0, 1);  
+    }else{
+        float4 data = ButterflyTex[int2(stage, x.x)].xyzw;
+        float2 p_ = Pingpong0[int2(data.z, x.y)].xy;
+        float2 q_ = Pingpong0[int2(data.w, x.y)].xy;
+        float2 w_ = float2(data.x, data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong1[x.xy] = float4(H.real, H.im, 0, 1);
+    }
+}
+
+void FFTVertical (int2 x)
+{
+    complex H;
+    
+    if (pingpong)
+    {
+        float4 data = ButterflyTex[int2(stage, x.y)].xyzw;
+        float2 p_ = Pingpong1[int2(x.x, data.z)].xy;
+        float2 q_ = Pingpong1[int2(x.x, data.w)].xy;
+        float2 w_ = float2(data.x, data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong0[x.xy] = float4(H.real, H.im, 0, 1);  
+    }else{
+        float4 data = ButterflyTex[int2(stage, x.y)].xyzw;
+        float2 p_ = Pingpong0[int2(x.x, data.z)].xy;
+        float2 q_ = Pingpong0[int2(x.x, data.w)].xy;
+        float2 w_ = float2(data.x, data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong1[x.xy] = float4(H.real, H.im, 0, 1);
+    }
+}
+
+void IFFTHorizontal (int2 x)
+{
+    complex H;
+    
+    if (pingpong)
+    {
+        float4 data = ButterflyTex[int2(stage, x.x)].xyzw;
+        float2 p_ = Pingpong1[int2(data.z, x.y)].xy;
+        float2 q_ = Pingpong1[int2(data.w, x.y)].xy;
+        float2 w_ = float2(data.x, -data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong0[x.xy] = float4(H.real, H.im, 0, 1);  
+    }else{
+        float4 data = ButterflyTex[int2(stage, x.x)].xyzw;
+        float2 p_ = Pingpong0[int2(data.z, x.y)].xy;
+        float2 q_ = Pingpong0[int2(data.w, x.y)].xy;
+        float2 w_ = float2(data.x, -data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong1[x.xy] = float4(H.real, H.im, 0, 1);
+    }
+}
+
+void IFFTVertical (int2 x)
+{
+    complex H;
+    
+    if (pingpong)
+    {
+        float4 data = ButterflyTex[int2(stage, x.y)].xyzw;
+        float2 p_ = Pingpong1[int2(x.x, data.z)].xy;
+        float2 q_ = Pingpong1[int2(x.x, data.w)].xy;
+        float2 w_ = float2(data.x, -data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong0[x.xy] = float4(H.real, H.im, 0, 1);  
+    }else{
+        float4 data = ButterflyTex[int2(stage, x.y)].xyzw;
+        float2 p_ = Pingpong0[int2(x.x, data.z)].xy;
+        float2 q_ = Pingpong0[int2(x.x, data.w)].xy;
+        float2 w_ = float2(data.x, -data.y);
+
+        complex p = new_complex(p_.x, p_.y);
+        complex q = new_complex(q_.x, q_.y);
+        complex w = new_complex(w_.x, w_.y);
+
+        H = comp_add(p, comp_mul(w, q));
+
+        Pingpong1[x.xy] = float4(H.real, H.im, 0, 1);
+    }
+}
+
+[numthreads(8,8,1)]
+void FFTButterflyCompute (uint3 id : SV_DispatchThreadID)
+{
+    if(isHorizontal)
+        FFTHorizontal(id.xy);
+    else
+        FFTVertical(id.xy);
+}
+
+[numthreads(8,8,1)]
+void Permute (uint3 id : SV_DispatchThreadID)
+{
+    if(pingpong){
+        Pingpong1[id.xy] = Pingpong1[id.xy] * (1.0 - 2.0 * ((id.x + id.y) % 2));
+    }else{ 
+        Pingpong0[id.xy] = Pingpong0[id.xy] * (1.0 - 2.0 * ((id.x + id.y) % 2));
+    }
+
+}
